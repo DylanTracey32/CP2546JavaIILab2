@@ -19,10 +19,95 @@ public class CollectionBenchmarker {
 
         List<ResultRow> results = new ArrayList<>();
 
-        // Part A benchmarks — to be added
+        // ArrayList
+        runBenchmark(results, "ArrayList", ArrayList::new, "add-at-end", (c, s, r) -> ((ArrayList<Integer>)c).add(r.nextInt()), false);
+        runBenchmark(results, "ArrayList", ArrayList::new, "get(index)", (c, s, r) -> sink += ((ArrayList<Integer>)c).get(r.nextInt(s)), false);
+        runBenchmark(results, "ArrayList", ArrayList::new, "add-at-front", (c, s, r) -> ((ArrayList<Integer>)c).add(0, r.nextInt()), true);
+        runBenchmark(results, "ArrayList", ArrayList::new, "contains", (c, s, r) -> sink += ((ArrayList<Integer>)c).contains(r.nextInt()) ? 1 : 0, true);
+
+        // LinkedList
+        runBenchmark(results, "LinkedList", LinkedList::new, "add-at-end", (c, s, r) -> ((LinkedList<Integer>)c).add(r.nextInt()), false);
+        runBenchmark(results, "LinkedList", LinkedList::new, "add-at-front", (c, s, r) -> ((LinkedList<Integer>)c).addFirst(r.nextInt()), false);
+        runBenchmark(results, "LinkedList", LinkedList::new, "contains", (c, s, r) -> sink += ((LinkedList<Integer>)c).contains(r.nextInt()) ? 1 : 0, true);
+
+        // TODO: ArrayDeque, Sets, Maps, PriorityQueue
 
         System.out.println("\nTotal execution time: " + ((System.currentTimeMillis() - totalStart) / 1000.0) + " seconds.");
         System.out.println("[System Verification] Global sink value: " + sink);
+    }
+
+    private static void runBenchmark(List<ResultRow> results, String collectionName, java.util.function.Supplier<Object> supplier, String operationName, BenchmarkTask task, boolean isHeavyOp) {
+        double[] nsPerOpArray = new double[SIZES.length];
+        Random rand = new Random(42);
+
+        System.out.printf("Running: %-15s | %-13s -> ", collectionName, operationName);
+
+        for (int i = 0; i < SIZES.length; i++) {
+            int n = SIZES[i];
+            System.out.print("[" + formatSize(n) + "... ");
+            long stepStart = System.currentTimeMillis();
+
+            int operations = 1_000_000;
+            if (isHeavyOp && n >= 100_000) {
+                if (n == 100_000) operations = 5_000;
+                else if (n == 1_000_000) operations = 500;
+                else if (n == 10_000_000) operations = 50;
+            }
+            int warmupOps = Math.max(10, operations / 2);
+
+            Object coll = supplier.get();
+            populateCollection(collectionName, coll, n, rand);
+
+            for (int k = 0; k < warmupOps; k++) {
+                task.execute(coll, n, rand);
+            }
+
+            long startTime = System.nanoTime();
+            int completedOps = 0;
+            for (int k = 0; k < operations; k++) {
+                task.execute(coll, n, rand);
+                completedOps++;
+                if (k % 10 == 0 && (System.currentTimeMillis() - stepStart) > 3000) {
+                    break;
+                }
+            }
+            long endTime = System.nanoTime();
+
+            nsPerOpArray[i] = (double) (endTime - startTime) / completedOps;
+            coll = null;
+            System.gc();
+
+            long stepDuration = System.currentTimeMillis() - stepStart;
+            System.out.print(stepDuration + "ms] ");
+        }
+        System.out.println("Done ✓");
+
+        double ratio1kTo10m = nsPerOpArray[4] / nsPerOpArray[0];
+        String guessedBigO = deduceBigO(ratio1kTo10m, isHeavyOp);
+
+        results.add(new ResultRow(collectionName, operationName, nsPerOpArray, ratio1kTo10m, guessedBigO));
+    }
+
+    private static void populateCollection(String name, Object coll, int n, Random rand) {
+        if (coll instanceof Collection) {
+            Collection<Integer> c = (Collection<Integer>) coll;
+            while (c.size() < n) c.add(rand.nextInt());
+        } else if (coll instanceof Map) {
+            Map<Integer, Integer> m = (Map<Integer, Integer>) coll;
+            while (m.size() < n) m.put(rand.nextInt(), rand.nextInt());
+        }
+    }
+
+    private static String formatSize(int n) {
+        if (n >= 1_000_000) return (n / 1_000_000) + "M";
+        if (n >= 1_000) return (n / 1_000) + "K";
+        return String.valueOf(n);
+    }
+
+    private static String deduceBigO(double totalGrowthRatio, boolean knownLinear) {
+        if (knownLinear || totalGrowthRatio > 15.0) return "O(n)";
+        if (totalGrowthRatio < 2.5) return "O(1)";
+        return "O(log n)";
     }
 
     static class ResultRow {

@@ -17,11 +17,11 @@ Fill in the fields; leave the structure intact.
 
 ## Entry 2
 
-- **Date:**
-- **Author:**
-- **Description:**
-- **Files changed:**
-- **Notes:**
+- **Date:** 2026-06-03
+- **Author:** DylanTracey32
+- **Description:** Added Part A timing benchmarks for ArrayList (add-at-end, get-by-index, add-at-front, contains) and LinkedList (add-at-end, add-at-front, contains). Implemented runBenchmark() with a warm-up phase, adaptive operation count for heavy ops, and a 3-second safety timeout. Added populateCollection(), formatSize(), and deduceBigO() helpers.
+- **Files changed:** CollectionBenchmarker.java, DEVLOG.md
+- **Notes:** ArrayList.get(index) confirms flat O(1); LinkedList.get shows clear O(n) growth due to sequential node traversal. ArrayDeque, Sets, Maps, and PriorityQueue still to be added.
 
 ---
 
