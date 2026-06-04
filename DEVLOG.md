@@ -27,11 +27,11 @@ Fill in the fields; leave the structure intact.
 
 ## Entry 3
 
-- **Date:**
-- **Author:**
-- **Description:**
-- **Files changed:**
-- **Notes:**
+- **Date:** 2026-06-04
+- **Author:** rileydruken2
+- **Description:** Completed Part A by adding ArrayDeque (addLast, addFirst, peekFirst), HashSet (add, contains), TreeSet (add, contains), HashMap (put, get, containsKey), TreeMap (put, get, containsKey), and PriorityQueue (offer, peek, poll) benchmarks. Wired up printConsoleTable() for console output and writeToCSV() to emit timeA.csv. Used global sink variable throughout to prevent dead-code elimination by the JIT.
+- **Files changed:** CollectionBenchmarker.java, DEVLOG.md
+- **Notes:** timeA.csv successfully generated. HashMap.get shows O(1) flat behaviour as predicted. TreeMap.get shows O(log n) growth as expected from Red-Black tree traversal.
 
 ---
 
