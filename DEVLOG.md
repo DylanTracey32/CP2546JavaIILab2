@@ -37,11 +37,11 @@ Fill in the fields; leave the structure intact.
 
 ## Entry 4
 
-- **Date:**
-- **Author:**
-- **Description:**
-- **Files changed:**
-- **Notes:**
+- **Date:** 2026-06-04
+- **Author:** rileydruken2
+- **Description:** Added Part B memory footprint measurement. Implemented runMemoryBenchmarks() using Runtime.getRuntime() totalMemory minus freeMemory deltas bracketed around each collection population. Added gcPause() helper to force two GC cycles and a 50ms sleep before each measurement to stabilize the heap baseline. Outputs memoryB.csv.
+- **Files changed:** CollectionBenchmarker.java, DEVLOG.md
+- **Notes:** Initial results: ArrayList uses roughly 4 bytes/element for int references at small n; HashMap overhead is 3-5x higher per element due to Node object allocation. Will extend to custom collections once Part D is implemented.
 
 ---
 

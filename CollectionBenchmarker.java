@@ -62,9 +62,76 @@ public class CollectionBenchmarker {
         printConsoleTable(results);
         writeToCSV(results);
 
+        // Part B — memory footprint of JDK collections
+        runMemoryBenchmarks();
+
         System.out.println("\nTotal execution time: " + ((System.currentTimeMillis() - totalStart) / 1000.0) + " seconds.");
         System.out.println("[System Verification] Global sink value: " + sink);
     }
+
+    // -----------------------------------------------------------------------
+    // Part B — JDK memory footprint
+    // -----------------------------------------------------------------------
+
+    private static void runMemoryBenchmarks() throws IOException {
+        final int[] SCALES = SIZES;
+        Runtime rt = Runtime.getRuntime();
+
+        String memHeader = "n,ArrayList_add_bytes,HashMap_put_bytes,ArrayList_get_bytes,HashMap_get_bytes";
+        StringBuilder memSB = new StringBuilder(memHeader).append('\n');
+
+        for (int n : SCALES) {
+            long[] m = new long[4];
+
+            { // ArrayList add
+                gcPause(rt);
+                long mb = used(rt);
+                ArrayList<Integer> c = new ArrayList<>();
+                for (int i = 0; i < n; i++) { c.add(i); sink += i; }
+                m[0] = Math.max(0, used(rt) - mb);
+                c = null; gcPause(rt);
+            }
+            { // HashMap put
+                gcPause(rt);
+                long mb = used(rt);
+                HashMap<Integer,Integer> c = new HashMap<>();
+                for (int i = 0; i < n; i++) { c.put(i, i); sink += i; }
+                m[1] = Math.max(0, used(rt) - mb);
+                c = null; gcPause(rt);
+            }
+
+            ArrayList<Integer>       alPre = new ArrayList<>();
+            HashMap<Integer,Integer> hmPre = new HashMap<>();
+            for (int i = 0; i < n; i++) { alPre.add(i); hmPre.put(i,i); }
+
+            { // ArrayList get
+                gcPause(rt);
+                long mb = used(rt);
+                for (int i = 0; i < n; i++) sink += alPre.get(i);
+                m[2] = Math.max(0, used(rt) - mb);
+            }
+            { // HashMap get
+                gcPause(rt);
+                long mb = used(rt);
+                for (int i = 0; i < n; i++) { Integer v = hmPre.get(i); if (v!=null) sink+=v; }
+                m[3] = Math.max(0, used(rt) - mb);
+            }
+
+            alPre = null; hmPre = null; gcPause(rt);
+
+            memSB.append(n).append(',')
+                 .append(m[0]).append(',').append(m[1]).append(',')
+                 .append(m[2]).append(',').append(m[3]).append('\n');
+            System.out.printf("Memory n=%-9d  AL=%,d bytes  HM=%,d bytes%n", n, m[0], m[1]);
+        }
+
+        writeCsvFile("memoryB.csv", memSB.toString());
+        System.out.println("Wrote memoryB.csv");
+    }
+
+    // -----------------------------------------------------------------------
+    // Benchmark helpers
+    // -----------------------------------------------------------------------
 
     private static void runBenchmark(List<ResultRow> results, String collectionName, java.util.function.Supplier<Object> supplier, String operationName, BenchmarkTask task, boolean isHeavyOp) {
         double[] nsPerOpArray = new double[SIZES.length];
@@ -161,6 +228,19 @@ public class CollectionBenchmarker {
         } catch (IOException e) {
             System.err.println("Error writing CSV file: " + e.getMessage());
         }
+    }
+
+    private static long used(Runtime rt) {
+        return rt.totalMemory() - rt.freeMemory();
+    }
+
+    private static void gcPause(Runtime rt) {
+        System.gc(); System.gc();
+        try { Thread.sleep(50); } catch (InterruptedException ignored) {}
+    }
+
+    private static void writeCsvFile(String filename, String content) throws IOException {
+        try (FileWriter fw = new FileWriter(filename)) { fw.write(content); }
     }
 
     static class ResultRow {
