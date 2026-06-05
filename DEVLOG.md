@@ -47,11 +47,11 @@ Fill in the fields; leave the structure intact.
 
 ## Entry 5
 
-- **Date:**
-- **Author:**
-- **Description:**
-- **Files changed:**
-- **Notes:**
+- **Date:** 2026-06-05
+- **Author:** DylanTracey32
+- **Description:** Implemented LobsterStream.java for Part C. Built a LOBSTER-style in-memory limit order book using TreeMap for each side keyed by price (bids in reverse order), ArrayDeque for FIFO queues at each price level, and HashMap for O(1) cancel lookups by order ID. Implemented execute() as a FIFO price-time sweep that walks firstEntry() of the opposite side, drains the queue in order, and removes empty price tiers. Added a daemon resource-monitor thread that prints CPU load, heap usage, and GC stats every second using JMX MXBeans.
+- **Files changed:** LobsterStream.java, DEVLOG.md
+- **Notes:** Ran with -Xms4g -Xmx8g. Reached approximately 3.21 GB live data with 13,184,567 resting orders at ~1.2 M events/sec. GC pressure increased noticeably past 30 M events.
 
 ---
 
