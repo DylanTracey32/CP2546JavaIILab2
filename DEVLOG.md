@@ -57,11 +57,11 @@ Fill in the fields; leave the structure intact.
 
 ## Entry 6
 
-- **Date:**
-- **Author:**
-- **Description:**
-- **Files changed:**
-- **Notes:**
+- **Date:** 2026-06-06
+- **Author:** DylanTracey32
+- **Description:** Implemented MyArrayList<E> for Part D. Backed by a raw Object[] with DEFAULT_CAPACITY of 16. ensureCapacity() doubles the buffer via Arrays.copyOf() on overflow, giving amortised O(1) add. add(), get(), set(), remove(), size(), isEmpty(), and clear() all implemented. Iterator provided via an anonymous inner class tracking a cursor index.
+- **Files changed:** MyArrayList.java, DEVLOG.md
+- **Notes:** Manually verified: added 20 elements, iterated the list, removed the mid-point element, confirmed size decremented and remaining elements shifted correctly.
 
 ---
 
