@@ -67,11 +67,11 @@ Fill in the fields; leave the structure intact.
 
 ## Entry 7
 
-- **Date:**
-- **Author:**
-- **Description:**
-- **Files changed:**
-- **Notes:**
+- **Date:** 2026-06-07
+- **Author:** rileydruken2
+- **Description:** Implemented MyHashMap<K,V> for Part D. Uses separate chaining with a private Node<K,V> inner class. bucketIndex() applies a high-bit spread (h ^= h >>> 16) before masking to capacity-1 to reduce clustering. rehash() triggers when load factor exceeds 0.75 and doubles capacity, re-inserting all nodes into the new bucket array. Full API: put(), get(), remove(), containsKey(), size(), isEmpty(), keys().
+- **Files changed:** MyHashMap.java, DEVLOG.md
+- **Notes:** Verified put/get/remove/containsKey against JDK HashMap output on 10 K random Integer key-value pairs. All results matched.
 
 ---
 
