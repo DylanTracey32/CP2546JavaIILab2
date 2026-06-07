@@ -77,11 +77,11 @@ Fill in the fields; leave the structure intact.
 
 ## Entry 8
 
-- **Date:**
-- **Author:**
-- **Description:**
-- **Files changed:**
-- **Notes:**
+- **Date:** 2026-06-07
+- **Author:** rileydruken2
+- **Description:** Replaced runMemoryBenchmarks() with runCustomVsJdkBenchmarks() which now benchmarks MyArrayList and MyHashMap side-by-side with JDK ArrayList and HashMap across all eight measurement slots (four timing, four memory). Renamed the output method to emit both memoryB.csv and compareD.csv from the same loop to avoid redundant passes. Also updated the CSV header format to include the custom-collection columns.
+- **Files changed:** CollectionBenchmarker.java, DEVLOG.md
+- **Notes:** At n=10 M, MyHashMap used ~730 MB vs JDK HashMap ~824 MB — our simpler growth strategy is marginally leaner. MyArrayList add was faster than JDK ArrayList add at large n, likely due to simpler ensureCapacity logic.
 
 ---
 

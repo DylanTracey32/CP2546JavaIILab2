@@ -57,81 +57,143 @@ public class CollectionBenchmarker {
             PriorityQueue<Integer> pq = (PriorityQueue<Integer>)c;
             if (!pq.isEmpty()) sink += pq.poll();
             pq.offer(r.nextInt());
-        }, true);
+        }, true); // Tagging poll as true to apply safety limits on large size operations
 
         printConsoleTable(results);
         writeToCSV(results);
 
-        // Part B — memory footprint of JDK collections
-        runMemoryBenchmarks();
+        // ---- Custom vs. JDK head-to-head (memoryB.csv + compareD.csv) -----
+        runCustomVsJdkBenchmarks();
 
-        System.out.println("\nTotal execution time: " + ((System.currentTimeMillis() - totalStart) / 1000.0) + " seconds.");
+        System.out.println("\nTotal execution tracking completed in: " + ((System.currentTimeMillis() - totalStart) / 1000.0) + " seconds.");
         System.out.println("[System Verification] Global sink value: " + sink);
     }
 
     // -----------------------------------------------------------------------
-    // Part B — JDK memory footprint
+    // Custom-structure comparative benchmarks
     // -----------------------------------------------------------------------
 
-    private static void runMemoryBenchmarks() throws IOException {
+    private static void runCustomVsJdkBenchmarks() throws IOException {
         final int[] SCALES = SIZES;
         Runtime rt = Runtime.getRuntime();
 
-        String memHeader = "n,ArrayList_add_bytes,HashMap_put_bytes,ArrayList_get_bytes,HashMap_get_bytes";
-        StringBuilder memSB = new StringBuilder(memHeader).append('\n');
+        // CSV headers
+        String timeHeader = "n,ArrayList_add_ns,MyArrayList_add_ns,HashMap_put_ns,MyHashMap_put_ns,"
+                          + "ArrayList_get_ns,MyArrayList_get_ns,HashMap_get_ns,MyHashMap_get_ns";
+        String memHeader  = timeHeader.replace("_ns", "_bytes");
+
+        StringBuilder timeSB = new StringBuilder(timeHeader).append('\n');
+        StringBuilder memSB  = new StringBuilder(memHeader).append('\n');
+        StringBuilder cmpSB  = new StringBuilder(timeHeader).append('\n');  // compareD mirrors time
 
         for (int n : SCALES) {
-            long[] m = new long[4];
+            long[] t = new long[8];
+            long[] m = new long[8];
 
-            { // ArrayList add
+            // Slot 0: ArrayList add
+            {
                 gcPause(rt);
-                long mb = used(rt);
+                long mb = used(rt); long t0 = System.nanoTime();
                 ArrayList<Integer> c = new ArrayList<>();
                 for (int i = 0; i < n; i++) { c.add(i); sink += i; }
-                m[0] = Math.max(0, used(rt) - mb);
+                t[0] = System.nanoTime() - t0; m[0] = Math.max(0, used(rt) - mb);
                 c = null; gcPause(rt);
             }
-            { // HashMap put
+            // Slot 1: MyArrayList add
+            {
                 gcPause(rt);
-                long mb = used(rt);
+                long mb = used(rt); long t0 = System.nanoTime();
+                MyArrayList<Integer> c = new MyArrayList<>();
+                for (int i = 0; i < n; i++) { c.add(i); sink += i; }
+                t[1] = System.nanoTime() - t0; m[1] = Math.max(0, used(rt) - mb);
+                c = null; gcPause(rt);
+            }
+            // Slot 2: HashMap put
+            {
+                gcPause(rt);
+                long mb = used(rt); long t0 = System.nanoTime();
                 HashMap<Integer,Integer> c = new HashMap<>();
                 for (int i = 0; i < n; i++) { c.put(i, i); sink += i; }
-                m[1] = Math.max(0, used(rt) - mb);
+                t[2] = System.nanoTime() - t0; m[2] = Math.max(0, used(rt) - mb);
+                c = null; gcPause(rt);
+            }
+            // Slot 3: MyHashMap put
+            {
+                gcPause(rt);
+                long mb = used(rt); long t0 = System.nanoTime();
+                MyHashMap<Integer,Integer> c = new MyHashMap<>();
+                for (int i = 0; i < n; i++) { c.put(i, i); sink += i; }
+                t[3] = System.nanoTime() - t0; m[3] = Math.max(0, used(rt) - mb);
                 c = null; gcPause(rt);
             }
 
-            ArrayList<Integer>       alPre = new ArrayList<>();
-            HashMap<Integer,Integer> hmPre = new HashMap<>();
-            for (int i = 0; i < n; i++) { alPre.add(i); hmPre.put(i,i); }
+            // Pre-build for get benchmarks (not timed)
+            ArrayList<Integer>         alPre = new ArrayList<>();
+            MyArrayList<Integer>       malPre = new MyArrayList<>();
+            HashMap<Integer,Integer>   hmPre = new HashMap<>();
+            MyHashMap<Integer,Integer> mhmPre = new MyHashMap<>();
+            for (int i = 0; i < n; i++) { alPre.add(i); malPre.add(i); hmPre.put(i,i); mhmPre.put(i,i); }
 
-            { // ArrayList get
+            // Slot 4: ArrayList get
+            {
                 gcPause(rt);
-                long mb = used(rt);
+                long mb = used(rt); long t0 = System.nanoTime();
                 for (int i = 0; i < n; i++) sink += alPre.get(i);
-                m[2] = Math.max(0, used(rt) - mb);
+                t[4] = System.nanoTime() - t0; m[4] = Math.max(0, used(rt) - mb);
             }
-            { // HashMap get
+            // Slot 5: MyArrayList get
+            {
                 gcPause(rt);
-                long mb = used(rt);
+                long mb = used(rt); long t0 = System.nanoTime();
+                for (int i = 0; i < n; i++) sink += malPre.get(i);
+                t[5] = System.nanoTime() - t0; m[5] = Math.max(0, used(rt) - mb);
+            }
+            // Slot 6: HashMap get
+            {
+                gcPause(rt);
+                long mb = used(rt); long t0 = System.nanoTime();
                 for (int i = 0; i < n; i++) { Integer v = hmPre.get(i); if (v!=null) sink+=v; }
-                m[3] = Math.max(0, used(rt) - mb);
+                t[6] = System.nanoTime() - t0; m[6] = Math.max(0, used(rt) - mb);
+            }
+            // Slot 7: MyHashMap get
+            {
+                gcPause(rt);
+                long mb = used(rt); long t0 = System.nanoTime();
+                for (int i = 0; i < n; i++) { Integer v = mhmPre.get(i); if (v!=null) sink+=v; }
+                t[7] = System.nanoTime() - t0; m[7] = Math.max(0, used(rt) - mb);
             }
 
-            alPre = null; hmPre = null; gcPause(rt);
+            alPre = null; malPre = null; hmPre = null; mhmPre = null; gcPause(rt);
 
-            memSB.append(n).append(',')
-                 .append(m[0]).append(',').append(m[1]).append(',')
-                 .append(m[2]).append(',').append(m[3]).append('\n');
-            System.out.printf("Memory n=%-9d  AL=%,d bytes  HM=%,d bytes%n", n, m[0], m[1]);
+            timeSB.append(csvRow(n, t));
+            memSB.append(csvRow(n, m));
+            cmpSB.append(csvRow(n, t));
+
+            System.out.printf("Custom/JDK n=%-9d  AL=%dns  MAL=%dns  HM=%dns  MHM=%dns%n",
+                n, t[0]/n, t[1]/n, t[2]/n, t[3]/n);
         }
 
-        writeCsvFile("memoryB.csv", memSB.toString());
-        System.out.println("Wrote memoryB.csv");
+        writeCsvFile("memoryB.csv",  memSB.toString());
+        writeCsvFile("compareD.csv", cmpSB.toString());
+        System.out.println("Wrote memoryB.csv and compareD.csv");
     }
 
-    // -----------------------------------------------------------------------
-    // Benchmark helpers
-    // -----------------------------------------------------------------------
+    private static String csvRow(int n, long[] v) {
+        return n+","+v[0]+","+v[1]+","+v[2]+","+v[3]+","+v[4]+","+v[5]+","+v[6]+","+v[7]+"\n";
+    }
+
+    private static long used(Runtime rt) {
+        return rt.totalMemory() - rt.freeMemory();
+    }
+
+    private static void gcPause(Runtime rt) {
+        System.gc(); System.gc();
+        try { Thread.sleep(50); } catch (InterruptedException ignored) {}
+    }
+
+    private static void writeCsvFile(String filename, String content) throws IOException {
+        try (FileWriter fw = new FileWriter(filename)) { fw.write(content); }
+    }
 
     private static void runBenchmark(List<ResultRow> results, String collectionName, java.util.function.Supplier<Object> supplier, String operationName, BenchmarkTask task, boolean isHeavyOp) {
         double[] nsPerOpArray = new double[SIZES.length];
@@ -144,6 +206,7 @@ public class CollectionBenchmarker {
             System.out.print("[" + formatSize(n) + "... ");
             long stepStart = System.currentTimeMillis();
 
+            // Adaptively scale operations down for heavy loops
             int operations = 1_000_000;
             if (isHeavyOp && n >= 100_000) {
                 if (n == 100_000) operations = 5_000;
@@ -155,15 +218,19 @@ public class CollectionBenchmarker {
             Object coll = supplier.get();
             populateCollection(collectionName, coll, n, rand);
 
+            // 1. Warm-up
             for (int k = 0; k < warmupOps; k++) {
                 task.execute(coll, n, rand);
             }
 
+            // 2. Timed Phase with live safety tracking
             long startTime = System.nanoTime();
             int completedOps = 0;
             for (int k = 0; k < operations; k++) {
                 task.execute(coll, n, rand);
                 completedOps++;
+
+                // Safety Timeout: If a single size pass takes longer than 3 seconds, break out
                 if (k % 10 == 0 && (System.currentTimeMillis() - stepStart) > 3000) {
                     break;
                 }
@@ -171,6 +238,7 @@ public class CollectionBenchmarker {
             long endTime = System.nanoTime();
 
             nsPerOpArray[i] = (double) (endTime - startTime) / completedOps;
+
             coll = null;
             System.gc();
 
@@ -228,19 +296,6 @@ public class CollectionBenchmarker {
         } catch (IOException e) {
             System.err.println("Error writing CSV file: " + e.getMessage());
         }
-    }
-
-    private static long used(Runtime rt) {
-        return rt.totalMemory() - rt.freeMemory();
-    }
-
-    private static void gcPause(Runtime rt) {
-        System.gc(); System.gc();
-        try { Thread.sleep(50); } catch (InterruptedException ignored) {}
-    }
-
-    private static void writeCsvFile(String filename, String content) throws IOException {
-        try (FileWriter fw = new FileWriter(filename)) { fw.write(content); }
     }
 
     static class ResultRow {
