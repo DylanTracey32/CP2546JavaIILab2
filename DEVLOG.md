@@ -92,3 +92,13 @@ Fill in the fields; leave the structure intact.
 - **Description:** Final cleanup and submission preparation. Ran the full benchmark suite to regenerate all CSV output files (timeA.csv, memoryB.csv, compareD.csv) and LobsterStream to regenerate scaleC.csv. Reviewed all four parts against the lab checklist. Committed all source files and CSV data files. Lab is complete and ready for submission.
 - **Files changed:** DEVLOG.md, timeA.csv, memoryB.csv, scaleC.csv, compareD.csv
 - **Notes:** All deliverables present. GitHub repository URL confirmed in lab report.
+
+---
+
+## Entry 10
+
+- **Date:** 2026-06-08
+- **Author:** DylanTracey32
+- **Description:** Fixed two gaps found during submission review. Added LinkedList.get(index) benchmark to Part A (marked as heavy op so operations throttle at large n) so the O(n) linear traversal curve is captured for Q1. Split the memory measurement into a dedicated runAllJdkMemoryBenchmarks() method covering all eight JDK structures (ArrayList, LinkedList, ArrayDeque, HashSet, TreeSet, HashMap, TreeMap, PriorityQueue) at n=1,000,000, outputting the required Structure/Elements/HeapUsed_MB/BytesPerElement format. Updated runCustomVsJdkBenchmarks() to write compareD.csv with both time (ns) and memory (bytes) columns side-by-side for the custom vs JDK comparison.
+- **Files changed:** CollectionBenchmarker.java, DEVLOG.md
+- **Notes:** All four CSVs now correct. Code compiles cleanly. Verified runnable.
