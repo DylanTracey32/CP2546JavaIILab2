@@ -87,8 +87,8 @@ Fill in the fields; leave the structure intact.
 
 ## Entry 9
 
-- **Date:**
-- **Author:**
-- **Description:**
-- **Files changed:**
-- **Notes:**
+- **Date:** 2026-06-08
+- **Author:** DylanTracey32
+- **Description:** Final cleanup and submission preparation. Ran the full benchmark suite to regenerate all CSV output files (timeA.csv, memoryB.csv, compareD.csv) and LobsterStream to regenerate scaleC.csv. Reviewed all four parts against the lab checklist. Committed all source files and CSV data files. Lab is complete and ready for submission.
+- **Files changed:** DEVLOG.md, timeA.csv, memoryB.csv, scaleC.csv, compareD.csv
+- **Notes:** All deliverables present. GitHub repository URL confirmed in lab report.
